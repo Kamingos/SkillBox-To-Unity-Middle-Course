@@ -1,6 +1,7 @@
-﻿using Unity.Entities;
+﻿using SkillBox.Course.CharacterMoveComponents;
+using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
+using Unity.Physics;
 
 namespace SkillBox.Course.PlayerComponentsSystems
 {
@@ -8,9 +9,12 @@ namespace SkillBox.Course.PlayerComponentsSystems
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var item in collection)
+            foreach (var (dir, velocity) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
             {
+                if (velocity.ValueRW.RigidBodyRef == null)
+                    continue;
 
+                velocity.ValueRW.RigidBodyRef.Value.linearVelocity = dir.Direction;
             }
         }
     }

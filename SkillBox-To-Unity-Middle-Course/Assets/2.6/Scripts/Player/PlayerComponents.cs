@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace SkillBox.Course.PlayerComponents
 {
-    public struct PlayerData : IComponentData
-    {
-        UnityObjectRef<Rigidbody> PlayerRBRef;
-        UnityObjectRef<Animator> PlayerAnimatorRef;
-    }
+    public struct PlayerTag : IComponentData { }
+    public struct IsPlayerNotAuthoredFlag : IComponentData, IEnableableComponent { }
 }
