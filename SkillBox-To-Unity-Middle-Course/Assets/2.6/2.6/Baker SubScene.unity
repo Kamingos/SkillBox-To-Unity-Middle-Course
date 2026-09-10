@@ -163,6 +163,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c32ec97f9abdcc54b9a9e82eb3b24c9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillBox.Course.PlayerHybridAuthoring
+  Speed: 2
+  SprintSpeed: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

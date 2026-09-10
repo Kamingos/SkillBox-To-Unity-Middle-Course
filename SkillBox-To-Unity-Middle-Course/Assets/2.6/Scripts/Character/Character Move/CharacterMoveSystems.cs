@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using UnityEngine;
 
 namespace SkillBox.Course.PlayerComponentsSystems
 {
@@ -9,12 +10,36 @@ namespace SkillBox.Course.PlayerComponentsSystems
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (dir, velocity) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
+            foreach (var (dir, rigidBody) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
             {
-                if (velocity.ValueRW.RigidBodyRef == null)
-                    continue;
+                rigidBody.ValueRW.RigidBodyRef.Value.linearVelocity = dir.Direction * dir.Speed;
+            }
+        }
+    }
+    public partial struct CharacterSprintSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            foreach (var (dir, sprint) in SystemAPI.Query<RefRW<RigidBodyRefComponent>, CharacterSprintComponent>())
+            {
+                dir.ValueRW.RigidBodyRef.Value.linearVelocity *= (sprint.Speed * sprint.Value + 1);
+            }
+        }
+    }
 
-                velocity.ValueRW.RigidBodyRef.Value.linearVelocity = dir.Direction;
+    public partial struct CharacterMoveToMoveDirectionSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            var deltaTime = SystemAPI.Time.DeltaTime;
+
+            foreach (var (dir, rigidBody) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
+            {
+                var nextRotation = Quaternion.LookRotation(new Vector3(dir.Direction.x, 0f, dir.Direction.z));
+
+                var quatSlerp = Quaternion.RotateTowards(rigidBody.ValueRO.RigidBodyRef.Value.rotation, nextRotation, deltaTime * 540f);
+
+                rigidBody.ValueRW.RigidBodyRef.Value.MoveRotation(quatSlerp);
             }
         }
     }
