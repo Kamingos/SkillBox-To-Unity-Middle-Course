@@ -1,4 +1,5 @@
-﻿using SkillBox.Course.CharacterMoveComponents;
+﻿using SkillBox.Course.CharacterDashComponents;
+using SkillBox.Course.CharacterMoveComponents;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -13,16 +14,6 @@ namespace SkillBox.Course.PlayerComponentsSystems
             foreach (var (dir, rigidBody) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
             {
                 rigidBody.ValueRW.RigidBodyRef.Value.linearVelocity = dir.Direction * dir.Speed;
-            }
-        }
-    }
-    public partial struct CharacterSprintSystem : ISystem
-    {
-        public void OnUpdate(ref SystemState state)
-        {
-            foreach (var (dir, sprint) in SystemAPI.Query<RefRW<RigidBodyRefComponent>, CharacterSprintComponent>())
-            {
-                dir.ValueRW.RigidBodyRef.Value.linearVelocity *= (sprint.Speed * sprint.Value + 1);
             }
         }
     }

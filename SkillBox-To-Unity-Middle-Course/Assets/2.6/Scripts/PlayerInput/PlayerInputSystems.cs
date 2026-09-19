@@ -1,8 +1,11 @@
-﻿using SkillBox.Course.CharacterMoveComponents;
+﻿using SkillBox.Course.CharacterDashComponents;
+using SkillBox.Course.CharacterMoveComponents;
+using SkillBox.Course.PlayerComponentsSystems;
 using SkillBox.Course.PlayerInputComponents;
 using SkillBox.Course.PlayerInputJoystick;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics.Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -52,7 +55,8 @@ namespace SkillBox.Course.PlayerInputSystems
         }
     }
 
-    public partial struct PlayerMoveSystem : ISystem
+    [UpdateBefore(typeof(PhysicsSimulationGroup))]
+    public partial struct PlayerInputToMoveSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
         {
@@ -60,10 +64,31 @@ namespace SkillBox.Course.PlayerInputSystems
             {
                 move.ValueRW.Direction = new float3(input.ValueRO.DirectionInput.x, 0, input.ValueRO.DirectionInput.y);
             }
+        }
+    }
 
-            foreach (var (sprint, input) in SystemAPI.Query<RefRW<CharacterSprintComponent>, RefRO<PlayerInputData>>())
+
+    [UpdateBefore(typeof(PhysicsSimulationGroup))]
+    [UpdateAfter(typeof(PlayerInputToMoveSystem))]
+    public partial struct PlayerInputToDashSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            var dashTimerLookup = SystemAPI.GetComponentLookup<CharacterDashEnabledTimer>();
+            var moveLookup = SystemAPI.GetComponentLookup<CharacterMoveComponent>();
+
+            var elapsedTime = SystemAPI.Time.ElapsedTime;
+
+            foreach (var (sprint, input, entity) in SystemAPI.Query<RefRW<CharacterDashComponent>, RefRO<PlayerInputData>>().WithDisabled<CharacterDashEnabledTimer>().WithEntityAccess())
             {
-                sprint.ValueRW.Value = input.ValueRO.Sprint;
+                if (input.ValueRO.Sprint <= 0f)
+                    continue;
+
+                dashTimerLookup.SetComponentEnabled(entity, true);
+                dashTimerLookup.GetRefRW(entity).ValueRW.DashStartTime = elapsedTime;
+
+
+                sprint.ValueRW.Direction = moveLookup[entity].Direction;
             }
         }
     }

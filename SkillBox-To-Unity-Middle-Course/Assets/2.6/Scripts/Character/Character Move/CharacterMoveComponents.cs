@@ -10,11 +10,6 @@ namespace SkillBox.Course.CharacterMoveComponents
 
         public float Speed;
     }
-    public struct CharacterSprintComponent : IComponentData
-    {
-        public float Value;
-        public float Speed;
-    }
 
     public struct RigidBodyRefComponent : IComponentData
     {
