@@ -24,6 +24,22 @@ namespace SkillBox.Course.CharacterDashComponents
 
             foreach (var (sprint, sprintEnabled) in SystemAPI.Query<RefRO<CharacterDashEnabledTimer>, EnabledRefRW<CharacterDashEnabledTimer>>())
             {
+                if (elapsedTime < sprint.ValueRO.DashStartTime + sprint.ValueRO.SprintDuration)
+                    continue;
+                
+                sprintEnabled.ValueRW = false;
+                
+            }
+        }
+    }
+    public partial struct CharacterDashTimerReloadUpdateSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            var elapsedTime = SystemAPI.Time.ElapsedTime;
+
+            foreach (var (sprint, sprintEnabled) in SystemAPI.Query<RefRO<CharacterDashReloadTimer>, EnabledRefRW<CharacterDashReloadTimer>>())
+            {
                 if (elapsedTime < sprint.ValueRO.DashStartTime + sprint.ValueRO.SprintReloadDuration)
                     continue;
                 

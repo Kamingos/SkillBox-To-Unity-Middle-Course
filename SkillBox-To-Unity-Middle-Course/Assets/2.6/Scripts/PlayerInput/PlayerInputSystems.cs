@@ -75,17 +75,23 @@ namespace SkillBox.Course.PlayerInputSystems
         public void OnUpdate(ref SystemState state)
         {
             var dashTimerLookup = SystemAPI.GetComponentLookup<CharacterDashEnabledTimer>();
+            var dashReloadTimerLookup = SystemAPI.GetComponentLookup<CharacterDashReloadTimer>();
+
+
             var moveLookup = SystemAPI.GetComponentLookup<CharacterMoveComponent>();
 
             var elapsedTime = SystemAPI.Time.ElapsedTime;
 
-            foreach (var (sprint, input, entity) in SystemAPI.Query<RefRW<CharacterDashComponent>, RefRO<PlayerInputData>>().WithDisabled<CharacterDashEnabledTimer>().WithEntityAccess())
+            foreach (var (sprint, input, entity) in SystemAPI.Query<RefRW<CharacterDashComponent>, RefRO<PlayerInputData>>().WithDisabled<CharacterDashEnabledTimer, CharacterDashReloadTimer>().WithEntityAccess())
             {
                 if (input.ValueRO.Sprint <= 0f)
                     continue;
 
                 dashTimerLookup.SetComponentEnabled(entity, true);
                 dashTimerLookup.GetRefRW(entity).ValueRW.DashStartTime = elapsedTime;
+
+                dashReloadTimerLookup.SetComponentEnabled(entity, true);
+                dashReloadTimerLookup.GetRefRW(entity).ValueRW.DashStartTime = elapsedTime;
 
 
                 sprint.ValueRW.Direction = moveLookup[entity].Direction;

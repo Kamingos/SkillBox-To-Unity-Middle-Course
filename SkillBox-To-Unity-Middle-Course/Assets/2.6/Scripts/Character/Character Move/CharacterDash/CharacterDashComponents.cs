@@ -12,6 +12,11 @@ namespace SkillBox.Course.CharacterDashComponents
     public struct CharacterDashEnabledTimer : IComponentData, IEnableableComponent
     {
         public double DashStartTime;
+        public double SprintDuration;
+    }
+    public struct CharacterDashReloadTimer : IComponentData, IEnableableComponent
+    {
+        public double DashStartTime;
         public double SprintReloadDuration;
     }
 

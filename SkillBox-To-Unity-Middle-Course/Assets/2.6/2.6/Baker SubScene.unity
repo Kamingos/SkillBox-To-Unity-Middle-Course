@@ -196,7 +196,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillBox.Course.PlayerHybridAuthoring
   Speed: 2
   SprintSpeed: 5
-  SprintReloadDuration: 0.5
+  SprintDuration: 0.5
+  SprintReloadDuration: 3
 --- !u!1 &1555063275
 GameObject:
   m_ObjectHideFlags: 0

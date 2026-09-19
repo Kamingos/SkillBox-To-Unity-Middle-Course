@@ -12,8 +12,10 @@ namespace SkillBox.Course
     public class PlayerHybridAuthoring : MonoBehaviour
     {
         [SerializeField] private float Speed = 1;
+
         [SerializeField] private float SprintSpeed = 3;
-        [SerializeField] private float SprintReloadDuration = 1;
+        [SerializeField] private float SprintDuration = 1;
+        [SerializeField] private float SprintReloadDuration = 4;
 
         private class Baker : Baker<PlayerHybridAuthoring>
         {
@@ -35,13 +37,23 @@ namespace SkillBox.Course
                     DashSpeed = authoring.SprintSpeed
                 });
 
+
                 AddComponent(entity, new CharacterDashEnabledTimer
+                {
+                    SprintDuration = authoring.SprintDuration
+                });
+
+                SetComponentEnabled<CharacterDashEnabledTimer>(entity, false);
+
+
+                AddComponent(entity, new CharacterDashReloadTimer
                 {
                     SprintReloadDuration = authoring.SprintReloadDuration
                 });
 
-                SetComponentEnabled<CharacterDashEnabledTimer>(entity, false);
-                
+                SetComponentEnabled<CharacterDashReloadTimer>(entity, false);
+
+
 
                 // Flag
                 AddComponent<IsPlayerNotAuthoredFlag>(entity);
