@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace SkillBox.Course.PlayerInputComponents
 {
+    public struct PlayerUnputRefComponent : IComponentData
+    {
+        public UnityObjectRef<FixedJoystick> Value;
+    }
+
     public struct PlayerInputData : IComponentData
     {
         public float2 DirectionInput;

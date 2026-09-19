@@ -1,13 +1,10 @@
 ﻿using SkillBox.Course.CharacterMoveComponents;
 using SkillBox.Course.PlayerInputComponents;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SkillBox.Course.PlayerInputJoystick;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Windows;
 
 namespace SkillBox.Course.PlayerInputSystems
 {
@@ -28,12 +25,24 @@ namespace SkillBox.Course.PlayerInputSystems
 
         protected override void OnUpdate()
         {
-            Debug.Log($"{_move.ReadValue<Vector2>().ToString()} | {_sprint.ReadValue<float>().ToString()}");
+
+            // тут два ввода для удобства (хотя и нарушает SRP), но вообще можно было бы отдельную систему создать
 
             foreach (var data in SystemAPI.Query<RefRW<PlayerInputData>>())
             {
                 data.ValueRW.DirectionInput = _move.ReadValue<Vector2>();
                 data.ValueRW.Sprint = _sprint.ReadValue<float>();
+            }
+
+            foreach (var data in SystemAPI.Query<RefRW<PlayerInputData>>())
+            {
+                data.ValueRW.DirectionInput += (float2)FixedJoysrickInputSingleton.Instance.JoystickInput.Direction;
+                data.ValueRW.Sprint += FixedJoysrickInputSingleton.Instance.SprintBtn;
+
+                data.ValueRW.Sprint = math.clamp(data.ValueRW.Sprint, 0, 1);
+
+                if (math.length(data.ValueRW.DirectionInput) > 0.01f)
+                    data.ValueRW.DirectionInput = math.normalize(data.ValueRW.DirectionInput);
             }
         }
 
