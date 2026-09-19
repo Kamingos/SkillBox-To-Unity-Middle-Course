@@ -46,6 +46,9 @@ namespace SkillBox.Course
                 // Flag
                 AddComponent<IsPlayerNotAuthoredFlag>(entity);
                 SetComponentEnabled<IsPlayerNotAuthoredFlag>(entity, true);
+
+                // Animation
+                AddComponent<AnimatorDataComponent>(entity);
             }
         }
     }

@@ -8,5 +8,17 @@ namespace SkillBox.Course.CharacterAnimatorComponents
     {
         public UnityObjectRef<Animator> AnimatorRef;
     }
+    public struct AnimatorDataComponent : IComponentData
+    {
+        public CharacterAnimationType AnimationType;
+    }
+
+    public enum CharacterAnimationType
+    {
+        IDLE,
+        WALK,
+        RUN,
+
+    }
 
 }
