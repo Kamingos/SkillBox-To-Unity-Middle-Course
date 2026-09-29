@@ -1,36 +1,42 @@
-﻿using SkillBox.Course.CharacterDashComponents;
+﻿﻿using SkillBox.Course.CharacterDashComponents;
 using SkillBox.Course.CharacterMoveComponents;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Physics.Systems;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace SkillBox.Course.PlayerComponentsSystems
 {
-    public partial struct MoveToLocalTransformSystem : ISystem
+    [UpdateBefore(typeof(PhysicsSimulationGroup))]
+    public partial struct CharacterMoveToPhysicsVelocitySystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (dir, rigidBody) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
+            foreach (var (dir, velocity) in SystemAPI.Query<CharacterMoveComponent, RefRW<PhysicsVelocity>>())
             {
-                rigidBody.ValueRW.RigidBodyRef.Value.linearVelocity = dir.Direction * dir.Speed;
+                velocity.ValueRW.Linear = dir.Direction * dir.Speed;
             }
         }
     }
 
+    [UpdateBefore(typeof(PhysicsSimulationGroup))]
+    [UpdateAfter(typeof(CharacterMoveToPhysicsVelocitySystem))]
     public partial struct CharacterMoveToMoveDirectionSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
         {
             var deltaTime = SystemAPI.Time.DeltaTime;
 
-            foreach (var (dir, rigidBody) in SystemAPI.Query<CharacterMoveComponent, RefRW<RigidBodyRefComponent>>())
+            foreach (var (dir, transform) in SystemAPI.Query<CharacterMoveComponent, RefRW<LocalTransform>>())
             {
-                var nextRotation = Quaternion.LookRotation(new Vector3(dir.Direction.x, 0f, dir.Direction.z));
+                if (math.lengthsq(dir.Direction) < 0.0001f)
+                    continue;
 
-                var quatSlerp = Quaternion.RotateTowards(rigidBody.ValueRO.RigidBodyRef.Value.rotation, nextRotation, deltaTime * 540f);
+                var nextRotation = quaternion.LookRotationSafe(math.normalize(dir.Direction), math.up());
 
-                rigidBody.ValueRW.RigidBodyRef.Value.MoveRotation(quatSlerp);
+                transform.ValueRW.Rotation = math.slerp(transform.ValueRO.Rotation, nextRotation, math.saturate(deltaTime * 10f));
             }
         }
     }

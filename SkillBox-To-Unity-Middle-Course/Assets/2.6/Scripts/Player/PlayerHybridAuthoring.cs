@@ -4,6 +4,8 @@ using SkillBox.Course.CharacterMoveComponents;
 using SkillBox.Course.PlayerComponents;
 using SkillBox.Course.PlayerInputComponents;
 using Unity.Entities;
+using Unity.Physics;
+using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,7 +23,8 @@ namespace SkillBox.Course
         {
             public override void Bake(PlayerHybridAuthoring authoring)
             {
-                var entity = GetEntity(TransformUsageFlags.None);
+                // Движение через DOTS-физику
+                var entity = GetEntity(TransformUsageFlags.Dynamic);
 
                 AddComponent<PlayerInputData>(entity);
 
@@ -29,6 +32,11 @@ namespace SkillBox.Course
                 {
                     Speed = authoring.Speed
                 });
+
+                // Kinematic: движение по PhysicsVelocity
+                AddComponent(entity, PhysicsMass.CreateKinematic(MassProperties.UnitSphere));
+                AddComponent(entity, new PhysicsVelocity());
+                AddComponent(entity, new PhysicsGravityFactor { Value = 0f });
 
 
                 // Dash

@@ -1,14 +1,16 @@
-﻿using SkillBox.Course.CharacterAnimatorComponents;
+﻿﻿using SkillBox.Course.CharacterAnimatorComponents;
 using SkillBox.Course.CharacterMoveComponents;
 using SkillBox.Course.GameObjectScripts;
 using SkillBox.Course.PlayerComponents;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Physics.Systems;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace SkillBox.Course.PlayerSystems
 {
-    // здесь происходит инициализация игрока
+    // Инициализация игрока
     public partial struct PlayerAuthoringSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
@@ -32,6 +34,24 @@ namespace SkillBox.Course.PlayerSystems
 
             entityBuffer.Playback(state.EntityManager);
             entityBuffer.Dispose();
+        }
+    }
+
+    // Позиция сущности → GameObject (после физики DOTS)
+    [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
+    public partial struct PlayerEntityToHybridSyncSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            foreach (var (transform, rigidBodyRef) in SystemAPI.Query<RefRO<LocalTransform>, RigidBodyRefComponent>())
+            {
+                var rigidBody = rigidBodyRef.RigidBodyRef.Value;
+                if (rigidBody == null)
+                    continue;
+
+                rigidBody.position = transform.ValueRO.Position;
+                rigidBody.rotation = transform.ValueRO.Rotation;
+            }
         }
     }
 }
