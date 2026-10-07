@@ -42,19 +42,19 @@ namespace SkillBox.Course
             return File.ReadAllText(path, Encoding.UTF8);
         }
 
-        public static List<YCObjectModel> LoadAll(string objectPrefix)
+        public static List<string> LoadAll(string objectPrefix)
         {
             string directory = Path.Combine(Application.persistentDataPath, SaveFolderName);
-            List<YCObjectModel> result = new List<YCObjectModel>();
+            List<string> result = new List<string>();
             if (!Directory.Exists(directory))
                 return result;
 
             string[] files = Directory.GetFiles(directory, objectPrefix + "*.json");
             for (int i = 0; i < files.Length; i++)
             {
-                YCObjectModel data = JsonUtility.FromJson<YCObjectModel>(File.ReadAllText(files[i], Encoding.UTF8));
-                if (!string.IsNullOrWhiteSpace(data.heroName) && !string.IsNullOrWhiteSpace(data.heroClass))
-                    result.Add(data);
+                string key = Path.GetFileName(files[i]);
+                string json = File.ReadAllText(files[i], Encoding.UTF8);
+                result.Add(key + "\n" + json);
             }
 
             return result;

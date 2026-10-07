@@ -111,20 +111,24 @@ namespace SkillBox.Course
             actualDataText.text = JsonUtility.ToJson(data, true);
         }
 
-        public void ShowProfiles(IList<YCObjectModel> profiles)
+        public void ShowProfiles(IList<string> profiles)
         {
             ClearProfileRows();
             for (int i = 0; i < profiles.Count; i++)
-                AddProfile(profiles[i]);
+            {
+                int separator = profiles[i].IndexOf('\n');
+                if (separator >= 0)
+                    AddProfile(profiles[i].Substring(0, separator), profiles[i].Substring(separator + 1));
+            }
         }
 
-        public void AddProfile(YCObjectModel profile)
+        public void AddProfile(string key, string json)
         {
             GameObject row = Instantiate(profileRowPrefab, profileListContent);
             row.SetActive(true);
-            row.name = "Hero_" + profile.heroName;
+            row.name = key;
             TMP_Text text = row.GetComponentInChildren<TMP_Text>(true);
-            text.text = JsonUtility.ToJson(profile, true);
+            text.text = key + "\n" + json;
             createdProfileRows.Add(row);
         }
 

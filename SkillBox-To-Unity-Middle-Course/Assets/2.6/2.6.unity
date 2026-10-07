@@ -3363,6 +3363,7 @@ MonoBehaviour:
   view: {fileID: 20261002}
   accountData: {fileID: 11400000, guid: c9a7256e370caf9419e187b751cce7cd, type: 2}
   objectKeyPrefix: hero_
+  objectListPrefix: ""
 --- !u!1 &1150084765
 GameObject:
   m_ObjectHideFlags: 0

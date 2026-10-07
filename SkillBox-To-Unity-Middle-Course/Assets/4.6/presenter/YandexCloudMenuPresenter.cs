@@ -11,6 +11,7 @@ namespace SkillBox.Course
         [SerializeField] private YandexCloudMenuView view;
         [SerializeField] private YadnexAccountDataView accountData;
         [SerializeField] private string objectKeyPrefix = "hero_";
+        [SerializeField] private string objectListPrefix = string.Empty;
 
         private readonly YandexObjectStorageClient storage = new YandexObjectStorageClient();
         private bool busy;
@@ -71,7 +72,7 @@ namespace SkillBox.Course
                 Encoding.UTF8.GetBytes(json),
                 message =>
                 {
-                    view.AddProfile(data);
+                    view.AddProfile(objectKey, json);
                     view.SetResponse(message + " Файл: " + objectKey + "." + localError);
                 },
                 message => view.SetResponse(message + localError));
@@ -87,7 +88,7 @@ namespace SkillBox.Course
 
             view.SetResponse("Получение списка героев из Object Storage...");
             yield return storage.ListObjects(
-                accountData.BucketName, objectKeyPrefix, accountData.KeyId, accountData.Secret,
+                accountData.BucketName, objectListPrefix, accountData.KeyId, accountData.Secret,
                 result => keys = result,
                 error => listError = error);
 
@@ -95,7 +96,7 @@ namespace SkillBox.Course
             {
                 try
                 {
-                    List<YCObjectModel> localProfiles = LocalJsonStorage.LoadAll(objectKeyPrefix);
+                    List<string> localProfiles = LocalJsonStorage.LoadAll(objectListPrefix);
                     view.ShowProfiles(localProfiles);
                     view.SetResponse(listError + " Показаны локальные данные: " + localProfiles.Count + ".");
                 }
@@ -112,10 +113,13 @@ namespace SkillBox.Course
                 yield break;
             }
 
-            List<YCObjectModel> profiles = new List<YCObjectModel>();
+            List<string> profiles = new List<string>();
             int failedDownloads = 0;
             for (int i = 0; i < keys.Length; i++)
             {
+                if (!keys[i].EndsWith(".json", System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 byte[] bytes = null;
                 string downloadError = null;
                 yield return storage.Download(
@@ -130,34 +134,15 @@ namespace SkillBox.Course
                     continue;
                 }
 
-                YCObjectModel data;
-                try
-                {
-                    data = JsonUtility.FromJson<YCObjectModel>(
-                        Encoding.UTF8.GetString(bytes).TrimStart('\uFEFF'));
-                }
-                catch (System.ArgumentException exception)
-                {
-                    failedDownloads++;
-                    Debug.LogWarning("Некорректный JSON в " + keys[i] + ": " + exception.Message, this);
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(data.heroName) || string.IsNullOrWhiteSpace(data.heroClass))
-                {
-                    failedDownloads++;
-                    Debug.LogWarning("Пропущен некорректный JSON объекта " + keys[i] + ".", this);
-                    continue;
-                }
-
-                profiles.Add(data);
-                string saveError = SaveLocal(keys[i], JsonUtility.ToJson(data, true));
+                string json = Encoding.UTF8.GetString(bytes).TrimStart('\uFEFF');
+                profiles.Add(keys[i] + "\n" + json);
+                string saveError = SaveLocal(keys[i], json);
                 if (!string.IsNullOrEmpty(saveError))
                     Debug.LogWarning("Локальная копия " + keys[i] + " не сохранена: " + saveError, this);
             }
 
             view.ShowProfiles(profiles);
-            view.SetResponse("В списке " + profiles.Count + " героев. Не загружено: " + failedDownloads + ".");
+            view.SetResponse("В списке " + profiles.Count + " JSON-файлов. Не скачано: " + failedDownloads + ".");
             busy = false;
         }
 

@@ -64,39 +64,75 @@ namespace SkillBox.Course
             string bucket, string prefix, string accessKey, string secret,
             Action<string[]> success, Action<string> failure)
         {
-            string query = "list-type=2&prefix=" + Uri.EscapeDataString(prefix);
-            string hash = Hash(new byte[0]);
-            string date;
-            string url;
-            string authorization = Sign(
-                "GET", bucket, string.Empty, query, accessKey, secret, hash, out url, out date);
+            List<string> keys = new List<string>();
+            string continuationToken = null;
 
-            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            do
             {
-                SetAuth(request, date, hash, authorization);
-                yield return request.SendWebRequest();
+                string query = BuildListQuery(prefix, continuationToken);
+                string hash = Hash(new byte[0]);
+                string date;
+                string url;
+                string authorization = Sign(
+                    "GET", bucket, string.Empty, query, accessKey, secret, hash, out url, out date);
 
-                if (request.result != UnityWebRequest.Result.Success)
+                using (UnityWebRequest request = UnityWebRequest.Get(url))
                 {
-                    failure(FormatError(request));
-                    yield break;
-                }
+                    SetAuth(request, date, hash, authorization);
+                    yield return request.SendWebRequest();
 
-                try
-                {
-                    XmlDocument document = new XmlDocument();
-                    document.LoadXml(request.downloadHandler.text);
-                    XmlNodeList keys = document.GetElementsByTagName("Key");
-                    List<string> result = new List<string>(keys.Count);
-                    foreach (XmlNode node in keys)
-                        result.Add(node.InnerText);
-                    success(result.ToArray());
-                }
-                catch (XmlException exception)
-                {
-                    failure("Object Storage вернул некорректный XML: " + exception.Message);
+                    if (request.result != UnityWebRequest.Result.Success)
+                    {
+                        failure(FormatError(request));
+                        yield break;
+                    }
+
+                    try
+                    {
+                        XmlDocument document = new XmlDocument();
+                        document.LoadXml(request.downloadHandler.text);
+                        XmlNodeList objectKeys = document.GetElementsByTagName("Key");
+                        foreach (XmlNode node in objectKeys)
+                            keys.Add(node.InnerText);
+
+                        string isTruncated = GetXmlValue(document, "IsTruncated");
+                        continuationToken = isTruncated == "true"
+                            ? GetXmlValue(document, "NextContinuationToken")
+                            : null;
+
+                        if (isTruncated == "true" && string.IsNullOrEmpty(continuationToken))
+                        {
+                            failure("Object Storage сообщил о следующей странице, но не вернул continuation token.");
+                            yield break;
+                        }
+                    }
+                    catch (XmlException exception)
+                    {
+                        failure("Object Storage вернул некорректный XML: " + exception.Message);
+                        yield break;
+                    }
                 }
             }
+
+            while (!string.IsNullOrEmpty(continuationToken));
+
+            success(keys.ToArray());
+        }
+
+        private static string BuildListQuery(string prefix, string continuationToken)
+        {
+            string query = string.IsNullOrEmpty(continuationToken)
+                ? "list-type=2"
+                : "continuation-token=" + Uri.EscapeDataString(continuationToken) + "&list-type=2";
+            return string.IsNullOrEmpty(prefix)
+                ? query
+                : query + "&prefix=" + Uri.EscapeDataString(prefix);
+        }
+
+        private static string GetXmlValue(XmlDocument document, string tagName)
+        {
+            XmlNodeList nodes = document.GetElementsByTagName(tagName);
+            return nodes.Count == 0 ? null : nodes[0].InnerText;
         }
 
         private static string Sign(
