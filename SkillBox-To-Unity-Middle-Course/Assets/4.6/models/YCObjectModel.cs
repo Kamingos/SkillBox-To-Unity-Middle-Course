@@ -12,5 +12,16 @@ namespace SkillBox.Course
         public float heroDashSpeed;
         public float heroDashReloadDuration;
         public int heroAttackPower;
+
+        public YCObjectModel(string heroName, string heroClass, float heroSpeed, float heroDashDuration, float heroDashSpeed, float heroDashReloadDuration, int heroAttackPower)
+        {
+            this.heroName = heroName;
+            this.heroClass = heroClass;
+            this.heroSpeed = heroSpeed;
+            this.heroDashDuration = heroDashDuration;
+            this.heroDashSpeed = heroDashSpeed;
+            this.heroDashReloadDuration = heroDashReloadDuration;
+            this.heroAttackPower = heroAttackPower;
+        }
     }
 }
